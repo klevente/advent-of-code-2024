@@ -1,4 +1,4 @@
-use advent_of_code_2024::{read_2d_char_array, read_file_to_string, Coords};
+use advent_of_code_2024::{read_2d_char_array, read_file_to_string, Coords2D};
 use array2d::Array2D;
 use phf::phf_map;
 
@@ -37,7 +37,11 @@ const NEXT_MAP: phf::Map<char, char> = phf_map! {
     'A' => 'S'
 };
 
-fn step_in_direction(chars: &Array2D<char>, pos: Coords, direction: Direction) -> Option<Coords> {
+fn step_in_direction(
+    chars: &Array2D<char>,
+    pos: Coords2D,
+    direction: Direction,
+) -> Option<Coords2D> {
     let num_columns = chars.row_len();
     let num_rows = chars.column_len();
 
@@ -46,56 +50,56 @@ fn step_in_direction(chars: &Array2D<char>, pos: Coords, direction: Direction) -
             if pos.row == 0 {
                 None
             } else {
-                Some(Coords::new(pos.row - 1, pos.column))
+                Some(pos.move_up())
             }
         }
         Direction::UpRight => {
             if pos.row == 0 || pos.column == num_columns - 1 {
                 None
             } else {
-                Some(Coords::new(pos.row - 1, pos.column + 1))
+                Some(pos.move_up_right())
             }
         }
         Direction::Right => {
             if pos.column == num_columns - 1 {
                 None
             } else {
-                Some(Coords::new(pos.row, pos.column + 1))
+                Some(pos.move_right())
             }
         }
         Direction::DownRight => {
             if pos.row == num_rows - 1 || pos.column == num_columns - 1 {
                 None
             } else {
-                Some(Coords::new(pos.row + 1, pos.column + 1))
+                Some(pos.move_down_right())
             }
         }
         Direction::Down => {
             if pos.row == num_rows - 1 {
                 None
             } else {
-                Some(Coords::new(pos.row + 1, pos.column))
+                Some(pos.move_down())
             }
         }
         Direction::DownLeft => {
             if pos.row == num_rows - 1 || pos.column == 0 {
                 None
             } else {
-                Some(Coords::new(pos.row + 1, pos.column - 1))
+                Some(pos.move_down_left())
             }
         }
         Direction::Left => {
             if pos.column == 0 {
                 None
             } else {
-                Some(Coords::new(pos.row, pos.column - 1))
+                Some(pos.move_left())
             }
         }
         Direction::UpLeft => {
             if pos.row == 0 || pos.column == 0 {
                 None
             } else {
-                Some(Coords::new(pos.row - 1, pos.column - 1))
+                Some(pos.move_up_left())
             }
         }
     }
@@ -103,7 +107,7 @@ fn step_in_direction(chars: &Array2D<char>, pos: Coords, direction: Direction) -
 
 fn search_word_in_direction_from(
     chars: &Array2D<char>,
-    current_pos: Coords,
+    current_pos: Coords2D,
     direction: Direction,
     char_to_check: char,
 ) -> bool {
@@ -131,7 +135,7 @@ fn find_num_of_xmas_in_grid(chars: &Array2D<char>) -> usize {
     chars
         .indices_row_major()
         .map(|(row, column)| {
-            let pos = Coords::new(row, column);
+            let pos = Coords2D::new(row, column);
             Direction::all_directions_iter()
                 .filter(|d| search_word_in_direction_from(&chars, pos, *d, 'X'))
                 .count()
@@ -139,7 +143,7 @@ fn find_num_of_xmas_in_grid(chars: &Array2D<char>) -> usize {
         .sum()
 }
 
-fn has_cross_mas(chars: &Array2D<char>, pos: Coords) -> bool {
+fn has_cross_mas(chars: &Array2D<char>, pos: Coords2D) -> bool {
     let Some(current_char) = chars.get(pos.row, pos.column) else {
         return false;
     };
@@ -181,7 +185,7 @@ fn has_cross_mas(chars: &Array2D<char>, pos: Coords) -> bool {
 fn find_num_of_cross_mas_in_grid(chars: &Array2D<char>) -> usize {
     chars
         .indices_row_major()
-        .filter(|(row, column)| has_cross_mas(chars, Coords::new(*row, *column)))
+        .filter(|(row, column)| has_cross_mas(chars, Coords2D::new(*row, *column)))
         .count()
 }
 

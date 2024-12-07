@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+anyhow = "1.0.94"
 array2d = { git = "https://github.com/klevente/array2d" }
 itertools = "0.13"
 phf = { version = "0.11.2", features = ["macros"] }
@@ -29,3 +30,7 @@ path = "src/day4.rs"
 [[bin]]
 name = "day5"
 path = "src/day5.rs"
+
+[[bin]]
+name = "day6"
+path = "src/day6.rs"

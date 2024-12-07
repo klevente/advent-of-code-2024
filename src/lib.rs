@@ -1,5 +1,5 @@
 use array2d::Array2D;
-use std::{convert::TryInto, fmt::Display, fs::read_to_string, path::Path};
+use std::{convert::TryInto, fs::read_to_string, path::Path};
 
 pub fn read_file_to_string(path: impl AsRef<Path>) -> String {
     read_to_string(path).unwrap()
@@ -40,10 +40,10 @@ pub fn vec_to_array<T, const N: usize>(v: Vec<T>) -> [T; N] {
         .unwrap_or_else(|v: Vec<T>| panic!("Expected a Vec of length {} but it was {}", N, v.len()))
 }
 
-pub fn print_2d_array<T: Clone + Display>(array: &Array2D<T>) {
+pub fn print_2d_array<T: Clone + std::fmt::Display>(array: &Array2D<T>) {
     for row in array.rows_iter() {
         for column in row.into_iter() {
-            print!("{}", column);
+            print!("{column}",);
         }
         println!();
     }
@@ -53,7 +53,7 @@ pub fn print_u8_2d_array_with_delim(array: &Array2D<u8>) {
     for row in array.rows_iter() {
         print!("|");
         for column in row.into_iter() {
-            print!("{:2}|", column);
+            print!("{column:2}|",);
         }
         println!();
     }
@@ -63,7 +63,7 @@ pub fn print_usize_2d_array_with_delim(array: &Array2D<usize>) {
     for row in array.rows_iter() {
         print!("|");
         for column in row.into_iter() {
-            print!("{:5}|", column);
+            print!("{column:5}|",);
         }
         println!();
     }
@@ -91,61 +91,99 @@ pub fn parse_2d_number_grid(s: &str) -> Array2D<u8> {
     Array2D::from_rows(elements).unwrap()
 }
 
-#[derive(Copy, Clone)]
-pub struct Coords {
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
+pub struct Coords2D {
     pub row: usize,
     pub column: usize,
 }
 
-impl Coords {
+impl Coords2D {
     pub fn new(row: usize, column: usize) -> Self {
         Self { row, column }
+    }
+
+    pub fn move_up(&self) -> Self {
+        Self::new(self.row - 1, self.column)
+    }
+
+    pub fn move_up_right(&self) -> Self {
+        Self::new(self.row - 1, self.column + 1)
+    }
+
+    pub fn move_right(&self) -> Self {
+        Self::new(self.row, self.column + 1)
+    }
+
+    pub fn move_down_right(&self) -> Self {
+        Self::new(self.row + 1, self.column + 1)
+    }
+
+    pub fn move_down(&self) -> Self {
+        Self::new(self.row + 1, self.column)
+    }
+
+    pub fn move_down_left(&self) -> Self {
+        Self::new(self.row + 1, self.column - 1)
+    }
+
+    pub fn move_left(&self) -> Self {
+        Self::new(self.row, self.column - 1)
+    }
+
+    pub fn move_up_left(&self) -> Self {
+        Self::new(self.row - 1, self.column - 1)
+    }
+}
+
+impl std::fmt::Display for Coords2D {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "(row={}, col={})", self.row, self.column)
     }
 }
 
 pub trait GetNeighbours<T> {
-    fn get_neighboring_indices(&self, position: Coords) -> Vec<Coords>;
+    fn get_neighboring_indices(&self, position: Coords2D) -> Vec<Coords2D>;
 
-    fn get_neighboring_values(&self, position: Coords) -> Vec<&T>;
+    fn get_neighboring_values(&self, position: Coords2D) -> Vec<&T>;
 }
 
 impl<T> GetNeighbours<T> for Array2D<T> {
-    fn get_neighboring_indices(&self, position: Coords) -> Vec<Coords> {
-        let Coords { row, column } = position;
+    fn get_neighboring_indices(&self, position: Coords2D) -> Vec<Coords2D> {
+        let Coords2D { row, column } = position;
         let num_columns = self.row_len();
         let num_rows = self.column_len();
 
         let mut neighbors = Vec::with_capacity(8);
 
         if row > 0 {
-            neighbors.push(Coords::new(row - 1, column));
+            neighbors.push(Coords2D::new(row - 1, column));
         }
         if row > 0 && column > 0 {
-            neighbors.push(Coords::new(row - 1, column - 1));
+            neighbors.push(Coords2D::new(row - 1, column - 1));
         }
         if column > 0 {
-            neighbors.push(Coords::new(row, column - 1));
+            neighbors.push(Coords2D::new(row, column - 1));
         }
         if row < num_rows - 1 && column > 0 {
-            neighbors.push(Coords::new(row + 1, column - 1))
+            neighbors.push(Coords2D::new(row + 1, column - 1))
         }
         if row < num_rows - 1 {
-            neighbors.push(Coords::new(row + 1, column));
+            neighbors.push(Coords2D::new(row + 1, column));
         }
         if row < num_rows - 1 && column < num_columns - 1 {
-            neighbors.push(Coords::new(row + 1, column + 1));
+            neighbors.push(Coords2D::new(row + 1, column + 1));
         }
         if column < num_columns - 1 {
-            neighbors.push(Coords::new(row, column + 1));
+            neighbors.push(Coords2D::new(row, column + 1));
         }
         if row > 0 && column < num_columns - 1 {
-            neighbors.push(Coords::new(row - 1, column + 1))
+            neighbors.push(Coords2D::new(row - 1, column + 1))
         }
 
         neighbors
     }
 
-    fn get_neighboring_values(&self, position: Coords) -> Vec<&T> {
+    fn get_neighboring_values(&self, position: Coords2D) -> Vec<&T> {
         self.get_neighboring_indices(position)
             .into_iter()
             .map(|c| {
