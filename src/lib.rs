@@ -141,13 +141,21 @@ impl std::fmt::Display for Coords2D {
     }
 }
 
-pub trait GetNeighbours<T> {
+impl From<(usize, usize)> for Coords2D {
+    fn from(value: (usize, usize)) -> Self {
+        Self::new(value.0, value.1)
+    }
+}
+
+pub trait GetNeighbors<T> {
     fn get_neighboring_indices(&self, position: Coords2D) -> Vec<Coords2D>;
+
+    fn get_neighboring_indices_no_diagonal(&self, position: Coords2D) -> Vec<Coords2D>;
 
     fn get_neighboring_values(&self, position: Coords2D) -> Vec<&T>;
 }
 
-impl<T> GetNeighbours<T> for Array2D<T> {
+impl<T> GetNeighbors<T> for Array2D<T> {
     fn get_neighboring_indices(&self, position: Coords2D) -> Vec<Coords2D> {
         let Coords2D { row, column } = position;
         let num_columns = self.row_len();
@@ -178,6 +186,29 @@ impl<T> GetNeighbours<T> for Array2D<T> {
         }
         if row > 0 && column < num_columns - 1 {
             neighbors.push(Coords2D::new(row - 1, column + 1))
+        }
+
+        neighbors
+    }
+
+    fn get_neighboring_indices_no_diagonal(&self, position: Coords2D) -> Vec<Coords2D> {
+        let Coords2D { row, column } = position;
+        let num_columns = self.row_len();
+        let num_rows = self.column_len();
+
+        let mut neighbors = Vec::with_capacity(4);
+
+        if row > 0 {
+            neighbors.push(Coords2D::new(row - 1, column));
+        }
+        if column > 0 {
+            neighbors.push(Coords2D::new(row, column - 1));
+        }
+        if row < num_rows - 1 {
+            neighbors.push(Coords2D::new(row + 1, column));
+        }
+        if column < num_columns - 1 {
+            neighbors.push(Coords2D::new(row, column + 1));
         }
 
         neighbors
